@@ -1,11 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { Collection, Note } from "@/utils/db";
+import type { Collection, Note, Tag } from "@/utils/db";
 
 type NoteListProps = {
   notes: Note[];
   collections: Collection[];
+  tags: Tag[];
+  activeTagId: string | null;
+  onSelectTagFilter: (tagId: string | null) => void;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onCreate: () => void;
@@ -22,6 +25,9 @@ const UNCOLLECTED_KEY = "uncollected";
 export default function NoteList({
   notes,
   collections,
+  tags,
+  activeTagId,
+  onSelectTagFilter,
   selectedId,
   onSelect,
   onCreate,
@@ -109,6 +115,40 @@ export default function NoteList({
           + New collection
         </button>
       </div>
+      {tags.length > 0 && (
+        <div className="border-b border-zinc-200 px-4 py-2 dark:border-zinc-800">
+          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Tags
+          </div>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onSelectTagFilter(null)}
+              className={`rounded-full px-2 py-0.5 text-xs ${
+                activeTagId === null
+                  ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900"
+                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
+              }`}
+            >
+              All
+            </button>
+            {tags.map((tag) => (
+              <button
+                key={tag.id}
+                onClick={() =>
+                  onSelectTagFilter(activeTagId === tag.id ? null : tag.id)
+                }
+                className={`rounded-full px-2 py-0.5 text-xs ${
+                  activeTagId === tag.id
+                    ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900"
+                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
+                }`}
+              >
+                {tag.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto">
         {notes.length === 0 && (
           <p className="p-4 text-sm text-zinc-500">No notes yet.</p>
@@ -212,6 +252,18 @@ export default function NoteList({
                             <div className="mt-1 truncate text-xs text-zinc-500">
                               {new Date(note.updated_at).toLocaleString()}
                             </div>
+                            {note.tags.length > 0 && (
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {note.tags.map((tag) => (
+                                  <span
+                                    key={tag.id}
+                                    className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                                  >
+                                    {tag.name}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </button>
                           <select
                             value={note.collection_id ?? ""}
