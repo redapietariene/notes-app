@@ -40,6 +40,41 @@ export async function getCollections(): Promise<Collection[]> {
   return data;
 }
 
+export async function createCollection(name: string): Promise<Collection> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("collections")
+    .insert({ name })
+    .select("id, name")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function renameCollection(
+  id: string,
+  name: string,
+): Promise<Collection> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("collections")
+    .update({ name })
+    .eq("id", id)
+    .select("id, name")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteCollection(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("collections").delete().eq("id", id);
+
+  if (error) throw error;
+}
+
 export async function createNote(): Promise<Note> {
   const supabase = await createClient();
   const { data, error } = await supabase
