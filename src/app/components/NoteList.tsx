@@ -10,6 +10,9 @@ type NoteListProps = {
   onSelect: (id: string) => void;
   onCreate: () => void;
   creating: boolean;
+  onCreateCollection: () => void;
+  onRenameCollection: (id: string, currentName: string) => void;
+  onDeleteCollection: (id: string, name: string) => void;
 };
 
 const UNCOLLECTED_KEY = "uncollected";
@@ -21,13 +24,14 @@ export default function NoteList({
   onSelect,
   onCreate,
   creating,
+  onCreateCollection,
+  onRenameCollection,
+  onDeleteCollection,
 }: NoteListProps) {
-  const [expanded, setExpanded] = useState<Set<string>>(
-    () => new Set([UNCOLLECTED_KEY, ...collections.map((c) => c.id)]),
-  );
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   function toggleGroup(key: string) {
-    setExpanded((prev) => {
+    setCollapsed((prev) => {
       const next = new Set(prev);
       if (next.has(key)) {
         next.delete(key);
@@ -74,30 +78,62 @@ export default function NoteList({
           {creating ? "Creating…" : "New note"}
         </button>
       </div>
+      <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-2 dark:border-zinc-800">
+        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Collections
+        </span>
+        <button
+          onClick={onCreateCollection}
+          className="text-xs font-medium text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+        >
+          + New collection
+        </button>
+      </div>
       <div className="flex-1 overflow-y-auto">
         {notes.length === 0 && (
           <p className="p-4 text-sm text-zinc-500">No notes yet.</p>
         )}
         {groups.map((group) => {
-          const isExpanded = expanded.has(group.key);
+          const isExpanded = !collapsed.has(group.key);
+          const isCollection = group.key !== UNCOLLECTED_KEY;
           return (
             <div key={group.key}>
-              <button
-                onClick={() => toggleGroup(group.key)}
-                className="flex w-full items-center gap-2 border-b border-zinc-100 px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 hover:text-zinc-700 dark:border-zinc-900 dark:hover:text-zinc-300"
-              >
-                <span
-                  className={`inline-block text-[10px] transition-transform ${
-                    isExpanded ? "rotate-90" : ""
-                  }`}
+              <div className="flex items-center border-b border-zinc-100 dark:border-zinc-900">
+                <button
+                  onClick={() => toggleGroup(group.key)}
+                  className="flex flex-1 items-center gap-2 px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
                 >
-                  ▶
-                </span>
-                <span className="truncate">{group.name}</span>
-                <span className="ml-auto font-normal normal-case text-zinc-400">
-                  {group.notes.length}
-                </span>
-              </button>
+                  <span
+                    className={`inline-block text-[10px] transition-transform ${
+                      isExpanded ? "rotate-90" : ""
+                    }`}
+                  >
+                    ▶
+                  </span>
+                  <span className="truncate">{group.name}</span>
+                  <span className="ml-auto font-normal normal-case text-zinc-400">
+                    {group.notes.length}
+                  </span>
+                </button>
+                {isCollection && (
+                  <div className="flex items-center gap-1 pr-3">
+                    <button
+                      onClick={() => onRenameCollection(group.key, group.name)}
+                      title="Rename collection"
+                      className="rounded px-1 text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      onClick={() => onDeleteCollection(group.key, group.name)}
+                      title="Delete collection"
+                      className="rounded px-1 text-xs text-zinc-400 hover:text-red-600 dark:hover:text-red-400"
+                    >
+                      🗑
+                    </button>
+                  </div>
+                )}
+              </div>
               {isExpanded && (
                 <ul>
                   {group.notes.length === 0 && (

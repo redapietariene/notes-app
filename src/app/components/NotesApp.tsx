@@ -4,8 +4,11 @@ import { useMemo, useState } from "react";
 import NoteEditor from "@/app/components/NoteEditor";
 import NoteList from "@/app/components/NoteList";
 import {
+  createCollection,
   createNote,
+  deleteCollection,
   deleteNote,
+  renameCollection,
   updateNote,
   type Collection,
   type Note,
@@ -21,7 +24,8 @@ export default function NotesApp({
   initialCollections,
 }: NotesAppProps) {
   const [notes, setNotes] = useState<Note[]>(initialNotes);
-  const [collections] = useState<Collection[]>(initialCollections);
+  const [collections, setCollections] =
+    useState<Collection[]>(initialCollections);
   const [selectedId, setSelectedId] = useState<string | null>(
     initialNotes[0]?.id ?? null,
   );
@@ -71,6 +75,38 @@ export default function NotesApp({
     }
   }
 
+  async function handleCreateCollection() {
+    const name = window.prompt("Collection name")?.trim();
+    if (!name) return;
+    const collection = await createCollection(name);
+    setCollections((prev) =>
+      [...prev, collection].sort((a, b) => a.name.localeCompare(b.name)),
+    );
+  }
+
+  async function handleRenameCollection(id: string, currentName: string) {
+    const name = window.prompt("Rename collection", currentName)?.trim();
+    if (!name || name === currentName) return;
+    const updated = await renameCollection(id, name);
+    setCollections((prev) =>
+      prev
+        .map((c) => (c.id === id ? updated : c))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    );
+  }
+
+  async function handleDeleteCollection(id: string, name: string) {
+    if (
+      !confirm(`Delete "${name}"? Its notes will become uncollected.`)
+    )
+      return;
+    await deleteCollection(id);
+    setCollections((prev) => prev.filter((c) => c.id !== id));
+    setNotes((prev) =>
+      prev.map((n) => (n.collection_id === id ? { ...n, collection_id: null } : n)),
+    );
+  }
+
   return (
     <div className="flex flex-1 overflow-hidden">
       <NoteList
@@ -80,6 +116,9 @@ export default function NotesApp({
         onSelect={setSelectedId}
         onCreate={handleCreate}
         creating={creating}
+        onCreateCollection={handleCreateCollection}
+        onRenameCollection={handleRenameCollection}
+        onDeleteCollection={handleDeleteCollection}
       />
       {selectedNote ? (
         <NoteEditor
