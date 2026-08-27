@@ -1,26 +1,92 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #e7e2d3;
+  --card: #fbf8f0;
+  --ink: #2a2722;
+  --ink-soft: #6b6558;
+  --brass: #9c6b2e;
+  --brass-soft: #e4d2ac;
+  --steel: #4b6e71;
+  --steel-soft: #d7e0df;
+  --line: #d8d0bc;
+  --danger: #a6432f;
+  --danger-soft: #f0dcd4;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-brass: var(--brass);
+  --color-brass-soft: var(--brass-soft);
+  --color-steel: var(--steel);
+  --color-steel-soft: var(--steel-soft);
+  --color-line: var(--line);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --paper: #1e1c18;
+    --card: #26231d;
+    --ink: #ede7d9;
+    --ink-soft: #9a9284;
+    --brass: #d3a25e;
+    --brass-soft: #4a3c22;
+    --steel: #7fa3a6;
+    --steel-soft: #2b3a3a;
+    --line: #3a362d;
+    --danger: #d97355;
+    --danger-soft: #3a251f;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+* {
+  border-color: var(--line);
+}
+
+::selection {
+  background: var(--brass-soft);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+/* Faint ruled-paper lines for the note body, spaced to match leading-7 (28px). */
+.ruled-paper {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 27px,
+    var(--line) 27px,
+    var(--line) 28px
+  );
+  background-position: 0 2px;
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    transform: rotate(-2deg) scale(1.3);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-2deg) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

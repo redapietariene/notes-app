@@ -16,6 +16,18 @@ type NoteEditorProps = {
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+const STAMP_LABEL: Record<Exclude<SaveStatus, "idle">, string> = {
+  saving: "Saving",
+  saved: "Saved",
+  error: "Failed",
+};
+
+const STAMP_COLOR: Record<Exclude<SaveStatus, "idle">, string> = {
+  saving: "border-steel text-steel",
+  saved: "border-brass text-brass",
+  error: "border-danger text-danger",
+};
+
 export default function NoteEditor({
   note,
   collections,
@@ -61,18 +73,23 @@ export default function NoteEditor({
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="flex items-center justify-between border-b border-zinc-200 p-4 dark:border-zinc-800">
-        <span className="text-xs text-zinc-500">
-          {status === "saving" && "Saving…"}
-          {status === "saved" && "Saved"}
-          {status === "error" && "Failed to save"}
-        </span>
+    <div className="m-4 flex flex-1 flex-col overflow-hidden rounded-xl border border-line bg-card shadow-sm">
+      <div className="flex items-center justify-between border-b border-line px-6 py-3">
+        <div className="h-7">
+          {status !== "idle" && (
+            <span
+              key={status}
+              className={`inline-block -rotate-2 rounded-sm border-2 border-dashed px-2.5 py-0.5 font-display text-xs uppercase tracking-wider ${STAMP_COLOR[status]} motion-safe:animate-[stamp_0.2s_ease-out]`}
+            >
+              {STAMP_LABEL[status]}
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <select
             value={note.collection_id ?? ""}
             onChange={(e) => onMove(note.id, e.target.value || null)}
-            className="rounded-md border border-zinc-200 bg-transparent px-2 py-1.5 text-sm dark:border-zinc-700"
+            className="rounded-md border border-line bg-transparent px-2 py-1.5 text-sm text-ink-soft"
           >
             <option value="">Uncollected</option>
             {collections.map((collection) => (
@@ -84,23 +101,23 @@ export default function NoteEditor({
           <button
             onClick={() => onDelete(note.id)}
             disabled={deleting}
-            className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
+            className="rounded-md border border-danger px-3 py-1.5 text-sm font-medium text-danger transition-colors hover:bg-danger hover:text-card disabled:opacity-50"
           >
             {deleting ? "Deleting…" : "Delete"}
           </button>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2 border-b border-zinc-200 px-6 py-3 dark:border-zinc-800">
+      <div className="flex flex-wrap items-center gap-2 border-b border-line px-6 py-3">
         {note.tags.map((tag) => (
           <span
             key={tag.id}
-            className="flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+            className="flex items-center gap-1.5 rounded-full border border-dashed border-line px-2.5 py-1 text-xs text-steel"
           >
             {tag.name}
             <button
               onClick={() => onRemoveTag(note.id, tag.id)}
               title="Remove tag"
-              className="text-zinc-400 hover:text-red-600 dark:hover:text-red-400"
+              className="text-steel/60 hover:text-danger"
             >
               ×
             </button>
@@ -117,21 +134,21 @@ export default function NoteEditor({
           }}
           onBlur={submitTag}
           placeholder="Add tag…"
-          className="w-24 border-none bg-transparent text-xs outline-none placeholder:text-zinc-400"
+          className="w-24 border-none bg-transparent text-xs text-ink outline-none placeholder:text-ink-soft"
         />
       </div>
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-6">
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-8 py-6">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Untitled note"
-          className="w-full border-none bg-transparent text-2xl font-semibold outline-none placeholder:text-zinc-400"
+          className="w-full border-none bg-transparent text-2xl font-semibold text-ink outline-none placeholder:text-ink-soft"
         />
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Start writing…"
-          className="w-full flex-1 resize-none border-none bg-transparent leading-7 outline-none placeholder:text-zinc-400"
+          className="ruled-paper w-full flex-1 resize-none border-none bg-transparent leading-7 text-ink outline-none placeholder:text-ink-soft"
         />
       </div>
     </div>
