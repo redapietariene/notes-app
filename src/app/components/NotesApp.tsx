@@ -19,6 +19,14 @@ type NotesAppProps = {
   initialCollections: Collection[];
 };
 
+function deriveTitleFromBody(body: string): string {
+  const firstLine = body.trim().split("\n")[0]?.trim() ?? "";
+  if (!firstLine) return "Untitled note";
+  return firstLine.length > 60
+    ? `${firstLine.slice(0, 60).trimEnd()}…`
+    : firstLine;
+}
+
 export default function NotesApp({
   initialNotes,
   initialCollections,
@@ -37,6 +45,17 @@ export default function NotesApp({
     [notes, selectedId],
   );
 
+  function upsertNote(updated: Note) {
+    setNotes((prev) =>
+      prev
+        .map((n) => (n.id === updated.id ? updated : n))
+        .sort(
+          (a, b) =>
+            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+        ),
+    );
+  }
+
   async function handleCreate() {
     setCreating(true);
     try {
@@ -52,15 +71,18 @@ export default function NotesApp({
     id: string,
     fields: { title?: string; body?: string },
   ) {
-    const updated = await updateNote(id, fields);
-    setNotes((prev) =>
-      prev
-        .map((n) => (n.id === id ? updated : n))
-        .sort(
-          (a, b) =>
-            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-        ),
-    );
+    const title = fields.title?.trim()
+      ? fields.title
+      : deriveTitleFromBody(fields.body ?? "");
+    const updated = await updateNote(id, { ...fields, title });
+    upsertNote(updated);
+  }
+
+  async function handleRenameNote(id: string, title: string) {
+    const note = notes.find((n) => n.id === id);
+    const effectiveTitle = title.trim() || deriveTitleFromBody(note?.body ?? "");
+    const updated = await updateNote(id, { title: effectiveTitle });
+    upsertNote(updated);
   }
 
   async function handleDelete(id: string) {
@@ -116,6 +138,7 @@ export default function NotesApp({
         onSelect={setSelectedId}
         onCreate={handleCreate}
         creating={creating}
+        onRenameNote={handleRenameNote}
         onCreateCollection={handleCreateCollection}
         onRenameCollection={handleRenameCollection}
         onDeleteCollection={handleDeleteCollection}

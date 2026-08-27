@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Collection, Note } from "@/utils/db";
 
 type NoteListProps = {
@@ -10,6 +10,7 @@ type NoteListProps = {
   onSelect: (id: string) => void;
   onCreate: () => void;
   creating: boolean;
+  onRenameNote: (id: string, title: string) => void;
   onCreateCollection: () => void;
   onRenameCollection: (id: string, currentName: string) => void;
   onDeleteCollection: (id: string, name: string) => void;
@@ -24,11 +25,15 @@ export default function NoteList({
   onSelect,
   onCreate,
   creating,
+  onRenameNote,
   onCreateCollection,
   onRenameCollection,
   onDeleteCollection,
 }: NoteListProps) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [draftTitle, setDraftTitle] = useState("");
+  const skipBlurRef = useRef(false);
 
   function toggleGroup(key: string) {
     setCollapsed((prev) => {
@@ -40,6 +45,19 @@ export default function NoteList({
       }
       return next;
     });
+  }
+
+  function startRenaming(note: Note) {
+    setEditingNoteId(note.id);
+    setDraftTitle(note.title);
+  }
+
+  function commitRename(note: Note) {
+    const title = draftTitle.trim();
+    setEditingNoteId(null);
+    if (title !== note.title) {
+      onRenameNote(note.id, title);
+    }
   }
 
   const notesByCollection = new Map<string, Note[]>();
@@ -141,25 +159,69 @@ export default function NoteList({
                       No notes
                     </li>
                   )}
-                  {group.notes.map((note) => (
-                    <li key={note.id}>
-                      <button
-                        onClick={() => onSelect(note.id)}
-                        className={`block w-full border-b border-zinc-100 px-4 py-3 pl-8 text-left dark:border-zinc-900 ${
-                          note.id === selectedId
-                            ? "bg-zinc-100 dark:bg-zinc-800"
-                            : "hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                        }`}
+                  {group.notes.map((note) =>
+                    editingNoteId === note.id ? (
+                      <li
+                        key={note.id}
+                        className="border-b border-zinc-100 px-4 py-3 pl-8 dark:border-zinc-900"
                       >
-                        <div className="truncate text-sm font-medium">
-                          {note.title || "Untitled note"}
-                        </div>
+                        <input
+                          autoFocus
+                          value={draftTitle}
+                          onChange={(e) => setDraftTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.currentTarget.blur();
+                            } else if (e.key === "Escape") {
+                              skipBlurRef.current = true;
+                              setEditingNoteId(null);
+                            }
+                          }}
+                          onBlur={() => {
+                            if (skipBlurRef.current) {
+                              skipBlurRef.current = false;
+                              return;
+                            }
+                            commitRename(note);
+                          }}
+                          placeholder="Untitled note"
+                          className="w-full border-none bg-transparent text-sm font-medium outline-none placeholder:text-zinc-400"
+                        />
                         <div className="mt-1 truncate text-xs text-zinc-500">
                           {new Date(note.updated_at).toLocaleString()}
                         </div>
-                      </button>
-                    </li>
-                  ))}
+                      </li>
+                    ) : (
+                      <li key={note.id}>
+                        <div
+                          className={`flex items-center border-b border-zinc-100 dark:border-zinc-900 ${
+                            note.id === selectedId
+                              ? "bg-zinc-100 dark:bg-zinc-800"
+                              : "hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                          }`}
+                        >
+                          <button
+                            onClick={() => onSelect(note.id)}
+                            className="flex-1 overflow-hidden px-4 py-3 pl-8 text-left"
+                          >
+                            <div className="truncate text-sm font-medium">
+                              {note.title || "Untitled note"}
+                            </div>
+                            <div className="mt-1 truncate text-xs text-zinc-500">
+                              {new Date(note.updated_at).toLocaleString()}
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => startRenaming(note)}
+                            title="Rename note"
+                            className="rounded px-2 text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
+                          >
+                            ✎
+                          </button>
+                        </div>
+                      </li>
+                    ),
+                  )}
                 </ul>
               )}
             </div>
