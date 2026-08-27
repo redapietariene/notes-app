@@ -11,6 +11,7 @@ type NoteListProps = {
   onCreate: () => void;
   creating: boolean;
   onRenameNote: (id: string, title: string) => void;
+  onMoveNote: (id: string, collectionId: string | null) => void;
   onCreateCollection: () => void;
   onRenameCollection: (id: string, currentName: string) => void;
   onDeleteCollection: (id: string, name: string) => void;
@@ -26,6 +27,7 @@ export default function NoteList({
   onCreate,
   creating,
   onRenameNote,
+  onMoveNote,
   onCreateCollection,
   onRenameCollection,
   onDeleteCollection,
@@ -211,6 +213,21 @@ export default function NoteList({
                               {new Date(note.updated_at).toLocaleString()}
                             </div>
                           </button>
+                          <select
+                            value={note.collection_id ?? ""}
+                            onChange={(e) =>
+                              onMoveNote(note.id, e.target.value || null)
+                            }
+                            title="Move to collection"
+                            className="max-w-[64px] rounded border-none bg-transparent text-[10px] text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
+                          >
+                            <option value="">Uncollected</option>
+                            {collections.map((collection) => (
+                              <option key={collection.id} value={collection.id}>
+                                {collection.name}
+                              </option>
+                            ))}
+                          </select>
                           <button
                             onClick={() => startRenaming(note)}
                             title="Rename note"

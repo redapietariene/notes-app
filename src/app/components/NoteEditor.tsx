@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Note } from "@/utils/db";
+import type { Collection, Note } from "@/utils/db";
 
 type NoteEditorProps = {
   note: Note;
+  collections: Collection[];
   onSave: (id: string, fields: { title?: string; body?: string }) => Promise<void>;
   onDelete: (id: string) => void;
+  onMove: (id: string, collectionId: string | null) => void;
   deleting: boolean;
 };
 
@@ -14,8 +16,10 @@ type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 export default function NoteEditor({
   note,
+  collections,
   onSave,
   onDelete,
+  onMove,
   deleting,
 }: NoteEditorProps) {
   const [title, setTitle] = useState(note.title);
@@ -52,13 +56,27 @@ export default function NoteEditor({
           {status === "saved" && "Saved"}
           {status === "error" && "Failed to save"}
         </span>
-        <button
-          onClick={() => onDelete(note.id)}
-          disabled={deleting}
-          className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
-        >
-          {deleting ? "Deleting…" : "Delete"}
-        </button>
+        <div className="flex items-center gap-3">
+          <select
+            value={note.collection_id ?? ""}
+            onChange={(e) => onMove(note.id, e.target.value || null)}
+            className="rounded-md border border-zinc-200 bg-transparent px-2 py-1.5 text-sm dark:border-zinc-700"
+          >
+            <option value="">Uncollected</option>
+            {collections.map((collection) => (
+              <option key={collection.id} value={collection.id}>
+                {collection.name}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={() => onDelete(note.id)}
+            disabled={deleting}
+            className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
+          >
+            {deleting ? "Deleting…" : "Delete"}
+          </button>
+        </div>
       </div>
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-6">
         <input
