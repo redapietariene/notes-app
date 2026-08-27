@@ -9,6 +9,8 @@ type NoteEditorProps = {
   onSave: (id: string, fields: { title?: string; body?: string }) => Promise<void>;
   onDelete: (id: string) => void;
   onMove: (id: string, collectionId: string | null) => void;
+  onAddTag: (id: string, tagName: string) => void;
+  onRemoveTag: (id: string, tagId: string) => void;
   deleting: boolean;
 };
 
@@ -20,11 +22,14 @@ export default function NoteEditor({
   onSave,
   onDelete,
   onMove,
+  onAddTag,
+  onRemoveTag,
   deleting,
 }: NoteEditorProps) {
   const [title, setTitle] = useState(note.title);
   const [body, setBody] = useState(note.body ?? "");
   const [status, setStatus] = useState<SaveStatus>("idle");
+  const [tagInput, setTagInput] = useState("");
   const isFirstRender = useRef(true);
 
   // This component is remounted (via `key={note.id}`) whenever the
@@ -47,6 +52,13 @@ export default function NoteEditor({
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title, body]);
+
+  function submitTag() {
+    const name = tagInput.trim();
+    if (!name) return;
+    onAddTag(note.id, name);
+    setTagInput("");
+  }
 
   return (
     <div className="flex flex-1 flex-col">
@@ -77,6 +89,36 @@ export default function NoteEditor({
             {deleting ? "Deleting…" : "Delete"}
           </button>
         </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 border-b border-zinc-200 px-6 py-3 dark:border-zinc-800">
+        {note.tags.map((tag) => (
+          <span
+            key={tag.id}
+            className="flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+          >
+            {tag.name}
+            <button
+              onClick={() => onRemoveTag(note.id, tag.id)}
+              title="Remove tag"
+              className="text-zinc-400 hover:text-red-600 dark:hover:text-red-400"
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        <input
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              submitTag();
+            }
+          }}
+          onBlur={submitTag}
+          placeholder="Add tag…"
+          className="w-24 border-none bg-transparent text-xs outline-none placeholder:text-zinc-400"
+        />
       </div>
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-6">
         <input

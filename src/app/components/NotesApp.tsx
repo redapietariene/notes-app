@@ -4,19 +4,23 @@ import { useMemo, useState } from "react";
 import NoteEditor from "@/app/components/NoteEditor";
 import NoteList from "@/app/components/NoteList";
 import {
+  addTagToNote,
   createCollection,
   createNote,
   deleteCollection,
   deleteNote,
+  removeTagFromNote,
   renameCollection,
   updateNote,
   type Collection,
   type Note,
+  type Tag,
 } from "@/utils/db";
 
 type NotesAppProps = {
   initialNotes: Note[];
   initialCollections: Collection[];
+  initialTags: Tag[];
 };
 
 function deriveTitleFromBody(body: string): string {
@@ -30,10 +34,13 @@ function deriveTitleFromBody(body: string): string {
 export default function NotesApp({
   initialNotes,
   initialCollections,
+  initialTags,
 }: NotesAppProps) {
   const [notes, setNotes] = useState<Note[]>(initialNotes);
   const [collections, setCollections] =
     useState<Collection[]>(initialCollections);
+  const [tags, setTags] = useState<Tag[]>(initialTags);
+  const [activeTagId, setActiveTagId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(
     initialNotes[0]?.id ?? null,
   );
@@ -134,11 +141,50 @@ export default function NotesApp({
     );
   }
 
+  async function handleAddTag(noteId: string, tagName: string) {
+    const name = tagName.trim();
+    if (!name) return;
+    const note = notes.find((n) => n.id === noteId);
+    if (note?.tags.some((t) => t.name === name)) return;
+
+    const tag = await addTagToNote(noteId, name);
+    setTags((prev) =>
+      prev.some((t) => t.id === tag.id)
+        ? prev
+        : [...prev, tag].sort((a, b) => a.name.localeCompare(b.name)),
+    );
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.id === noteId && !n.tags.some((t) => t.id === tag.id)
+          ? { ...n, tags: [...n.tags, tag] }
+          : n,
+      ),
+    );
+  }
+
+  async function handleRemoveTag(noteId: string, tagId: string) {
+    await removeTagFromNote(noteId, tagId);
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.id === noteId
+          ? { ...n, tags: n.tags.filter((t) => t.id !== tagId) }
+          : n,
+      ),
+    );
+  }
+
+  const visibleNotes = activeTagId
+    ? notes.filter((n) => n.tags.some((t) => t.id === activeTagId))
+    : notes;
+
   return (
     <div className="flex flex-1 overflow-hidden">
       <NoteList
-        notes={notes}
+        notes={visibleNotes}
         collections={collections}
+        tags={tags}
+        activeTagId={activeTagId}
+        onSelectTagFilter={setActiveTagId}
         selectedId={selectedId}
         onSelect={setSelectedId}
         onCreate={handleCreate}
@@ -157,6 +203,8 @@ export default function NotesApp({
           onSave={handleSave}
           onDelete={handleDelete}
           onMove={handleMoveNote}
+          onAddTag={handleAddTag}
+          onRemoveTag={handleRemoveTag}
           deleting={deletingId === selectedNote.id}
         />
       ) : (
