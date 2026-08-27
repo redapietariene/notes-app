@@ -85,6 +85,11 @@ export default function NotesApp({
     upsertNote(updated);
   }
 
+  async function handleMoveNote(id: string, collectionId: string | null) {
+    const updated = await updateNote(id, { collection_id: collectionId });
+    upsertNote(updated);
+  }
+
   async function handleDelete(id: string) {
     if (!confirm("Delete this note? This can't be undone.")) return;
     setDeletingId(id);
@@ -139,6 +144,7 @@ export default function NotesApp({
         onCreate={handleCreate}
         creating={creating}
         onRenameNote={handleRenameNote}
+        onMoveNote={handleMoveNote}
         onCreateCollection={handleCreateCollection}
         onRenameCollection={handleRenameCollection}
         onDeleteCollection={handleDeleteCollection}
@@ -147,8 +153,10 @@ export default function NotesApp({
         <NoteEditor
           key={selectedNote.id}
           note={selectedNote}
+          collections={collections}
           onSave={handleSave}
           onDelete={handleDelete}
+          onMove={handleMoveNote}
           deleting={deletingId === selectedNote.id}
         />
       ) : (

@@ -89,7 +89,7 @@ export async function createNote(): Promise<Note> {
 
 export async function updateNote(
   id: string,
-  fields: { title?: string; body?: string },
+  fields: { title?: string; body?: string; collection_id?: string | null },
 ): Promise<Note> {
   const supabase = await createClient();
   const { data, error } = await supabase
