@@ -40,7 +40,7 @@ export default function NotesApp({
   const [collections, setCollections] =
     useState<Collection[]>(initialCollections);
   const [tags, setTags] = useState<Tag[]>(initialTags);
-  const [activeTagId, setActiveTagId] = useState<string | null>(null);
+  const [activeTagIds, setActiveTagIds] = useState<Set<string>>(new Set());
   const [selectedId, setSelectedId] = useState<string | null>(
     initialNotes[0]?.id ?? null,
   );
@@ -173,9 +173,26 @@ export default function NotesApp({
     );
   }
 
-  const visibleNotes = activeTagId
-    ? notes.filter((n) => n.tags.some((t) => t.id === activeTagId))
-    : notes;
+  function handleToggleTagFilter(tagId: string) {
+    setActiveTagIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(tagId)) {
+        next.delete(tagId);
+      } else {
+        next.add(tagId);
+      }
+      return next;
+    });
+  }
+
+  function handleClearTagFilter() {
+    setActiveTagIds(new Set());
+  }
+
+  const visibleNotes =
+    activeTagIds.size === 0
+      ? notes
+      : notes.filter((n) => n.tags.some((t) => activeTagIds.has(t.id)));
 
   return (
     <div className="flex flex-1 overflow-hidden">
@@ -183,8 +200,9 @@ export default function NotesApp({
         notes={visibleNotes}
         collections={collections}
         tags={tags}
-        activeTagId={activeTagId}
-        onSelectTagFilter={setActiveTagId}
+        activeTagIds={activeTagIds}
+        onToggleTagFilter={handleToggleTagFilter}
+        onClearTagFilter={handleClearTagFilter}
         selectedId={selectedId}
         onSelect={setSelectedId}
         onCreate={handleCreate}

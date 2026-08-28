@@ -7,8 +7,9 @@ type NoteListProps = {
   notes: Note[];
   collections: Collection[];
   tags: Tag[];
-  activeTagId: string | null;
-  onSelectTagFilter: (tagId: string | null) => void;
+  activeTagIds: Set<string>;
+  onToggleTagFilter: (tagId: string) => void;
+  onClearTagFilter: () => void;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onCreate: () => void;
@@ -26,8 +27,9 @@ export default function NoteList({
   notes,
   collections,
   tags,
-  activeTagId,
-  onSelectTagFilter,
+  activeTagIds,
+  onToggleTagFilter,
+  onClearTagFilter,
   selectedId,
   onSelect,
   onCreate,
@@ -126,9 +128,9 @@ export default function NoteList({
           </div>
           <div className="flex flex-wrap gap-1.5">
             <button
-              onClick={() => onSelectTagFilter(null)}
+              onClick={onClearTagFilter}
               className={`rounded-full border px-2 py-0.5 text-xs transition-colors ${
-                activeTagId === null
+                activeTagIds.size === 0
                   ? "border-brass bg-brass text-card"
                   : "border-dashed border-line text-ink-soft hover:border-brass hover:text-brass"
               }`}
@@ -138,11 +140,10 @@ export default function NoteList({
             {tags.map((tag) => (
               <button
                 key={tag.id}
-                onClick={() =>
-                  onSelectTagFilter(activeTagId === tag.id ? null : tag.id)
-                }
+                onClick={() => onToggleTagFilter(tag.id)}
+                aria-pressed={activeTagIds.has(tag.id)}
                 className={`rounded-full border px-2 py-0.5 text-xs transition-colors ${
-                  activeTagId === tag.id
+                  activeTagIds.has(tag.id)
                     ? "border-brass bg-brass text-card"
                     : "border-dashed border-line text-ink-soft hover:border-brass hover:text-brass"
                 }`}
