@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import NoteEditor from "@/app/components/NoteEditor";
 import NoteList from "@/app/components/NoteList";
 import {
@@ -11,11 +11,14 @@ import {
   deleteNote,
   removeTagFromNote,
   renameCollection,
+  searchNotes,
   updateNote,
   type Collection,
   type Note,
   type Tag,
 } from "@/utils/db";
+
+const SEARCH_DEBOUNCE_MS = 250;
 
 type NotesAppProps = {
   initialNotes: Note[];
@@ -46,11 +49,38 @@ export default function NotesApp({
   );
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{
+    query: string;
+    ids: string[];
+  } | null>(null);
+  const searchRequestRef = useRef(0);
 
   const selectedNote = useMemo(
     () => notes.find((n) => n.id === selectedId) ?? null,
     [notes, selectedId],
   );
+
+  const trimmedQuery = searchQuery.trim();
+  const isSearchActive = trimmedQuery.length > 0;
+  const searching = isSearchActive && searchResults?.query !== trimmedQuery;
+
+  useEffect(() => {
+    if (!trimmedQuery) return;
+
+    const requestId = ++searchRequestRef.current;
+    const timer = setTimeout(async () => {
+      const results = await searchNotes(trimmedQuery);
+      if (searchRequestRef.current === requestId) {
+        setSearchResults({
+          query: trimmedQuery,
+          ids: results.map((n) => n.id),
+        });
+      }
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [trimmedQuery]);
 
   function upsertNote(updated: Note) {
     setNotes((prev) =>
@@ -87,7 +117,8 @@ export default function NotesApp({
 
   async function handleRenameNote(id: string, title: string) {
     const note = notes.find((n) => n.id === id);
-    const effectiveTitle = title.trim() || deriveTitleFromBody(note?.body ?? "");
+    const effectiveTitle =
+      title.trim() || deriveTitleFromBody(note?.body ?? "");
     const updated = await updateNote(id, { title: effectiveTitle });
     upsertNote(updated);
   }
@@ -130,14 +161,14 @@ export default function NotesApp({
   }
 
   async function handleDeleteCollection(id: string, name: string) {
-    if (
-      !confirm(`Delete "${name}"? Its notes will become uncollected.`)
-    )
+    if (!confirm(`Delete "${name}"? Its notes will become uncollected.`))
       return;
     await deleteCollection(id);
     setCollections((prev) => prev.filter((c) => c.id !== id));
     setNotes((prev) =>
-      prev.map((n) => (n.collection_id === id ? { ...n, collection_id: null } : n)),
+      prev.map((n) =>
+        n.collection_id === id ? { ...n, collection_id: null } : n,
+      ),
     );
   }
 
@@ -189,10 +220,21 @@ export default function NotesApp({
     setActiveTagIds(new Set());
   }
 
+  let baseNotes: Note[];
+  if (isSearchActive) {
+    const ids = searchResults?.query === trimmedQuery ? searchResults.ids : [];
+    const noteById = new Map(notes.map((n) => [n.id, n]));
+    baseNotes = ids
+      .map((id) => noteById.get(id))
+      .filter((n): n is Note => n !== undefined);
+  } else {
+    baseNotes = notes;
+  }
+
   const visibleNotes =
     activeTagIds.size === 0
-      ? notes
-      : notes.filter((n) => n.tags.some((t) => activeTagIds.has(t.id)));
+      ? baseNotes
+      : baseNotes.filter((n) => n.tags.some((t) => activeTagIds.has(t.id)));
 
   return (
     <div className="flex flex-1 overflow-hidden">
@@ -203,6 +245,10 @@ export default function NotesApp({
         activeTagIds={activeTagIds}
         onToggleTagFilter={handleToggleTagFilter}
         onClearTagFilter={handleClearTagFilter}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        isSearchActive={isSearchActive}
+        searching={searching}
         selectedId={selectedId}
         onSelect={setSelectedId}
         onCreate={handleCreate}

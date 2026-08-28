@@ -51,6 +51,16 @@ export async function getNotes(): Promise<Note[]> {
   return (data as unknown as NoteRow[]).map(mapNote);
 }
 
+export async function searchNotes(query: string): Promise<Note[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .rpc("search_notes", { search_query: query })
+    .select(NOTE_COLUMNS);
+
+  if (error) throw error;
+  return (data as unknown as NoteRow[]).map(mapNote);
+}
+
 export async function createNote(): Promise<Note> {
   const supabase = await createClient();
   const { data, error } = await supabase
