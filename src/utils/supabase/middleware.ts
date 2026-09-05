@@ -26,8 +26,7 @@ export async function updateSession(request: NextRequest) {
   );
 
   // Refresh the auth session so server components get a valid token.
-  // No auth pages exist yet, but this keeps sessions alive once added.
-  await supabase.auth.getUser();
+  await supabase.auth.getClaims();
 
   return supabaseResponse;
 }

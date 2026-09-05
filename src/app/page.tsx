@@ -1,17 +1,9 @@
-import NotesApp from "@/app/components/NotesApp";
-import { getCollections, getNotes, getTags } from "@/utils/db";
+import { redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
 
 export default async function Home() {
-  const [notes, collections, tags] = await Promise.all([
-    getNotes(),
-    getCollections(),
-    getTags(),
-  ]);
-  return (
-    <NotesApp
-      initialNotes={notes}
-      initialCollections={collections}
-      initialTags={tags}
-    />
-  );
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
+
+  redirect(error || !data ? "/login" : "/workspace");
 }
