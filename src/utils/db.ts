@@ -2,6 +2,14 @@
 
 import { createClient } from "@/utils/supabase/server";
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+async function getUserId(supabase: SupabaseServerClient): Promise<string> {
+  const { data, error } = await supabase.auth.getClaims();
+  if (error || !data) throw new Error("Not signed in");
+  return data.claims.sub;
+}
+
 export type Tag = {
   id: string;
   name: string;
@@ -63,9 +71,10 @@ export async function searchNotes(query: string): Promise<Note[]> {
 
 export async function createNote(): Promise<Note> {
   const supabase = await createClient();
+  const userId = await getUserId(supabase);
   const { data, error } = await supabase
     .from("notes")
-    .insert({ title: "Untitled note", body: "" })
+    .insert({ title: "Untitled note", body: "", user_id: userId })
     .select(NOTE_COLUMNS)
     .single();
 
@@ -109,9 +118,10 @@ export async function getCollections(): Promise<Collection[]> {
 
 export async function createCollection(name: string): Promise<Collection> {
   const supabase = await createClient();
+  const userId = await getUserId(supabase);
   const { data, error } = await supabase
     .from("collections")
-    .insert({ name })
+    .insert({ name, user_id: userId })
     .select("id, name")
     .single();
 
@@ -158,11 +168,12 @@ export async function addTagToNote(
   tagName: string,
 ): Promise<Tag> {
   const supabase = await createClient();
+  const userId = await getUserId(supabase);
   const name = tagName.trim();
 
   const { data: inserted, error: insertError } = await supabase
     .from("tags")
-    .insert({ name })
+    .insert({ name, user_id: userId })
     .select("id, name")
     .single();
 
