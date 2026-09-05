@@ -16,12 +16,13 @@ export default async function WorkspaceLayout({
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center justify-between border-b border-line bg-paper px-4 py-2">
-        <span className="font-mono text-xs text-ink-soft">
-          {data.claims.email}
-        </span>
-        <SignOutButton />
-      </div>
+      <header className="flex items-center justify-between border-b border-line bg-card px-6 py-3.5">
+        <span className="text-base font-semibold text-ink">Notes</span>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-ink-soft">{data.claims.email}</span>
+          <SignOutButton />
+        </div>
+      </header>
       <div className="flex flex-1 overflow-hidden">{children}</div>
     </div>
   );
