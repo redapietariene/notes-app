@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #e7e2d3;
-  --card: #fbf8f0;
-  --ink: #2a2722;
-  --ink-soft: #6b6558;
-  --brass: #9c6b2e;
-  --brass-soft: #e4d2ac;
-  --steel: #4b6e71;
-  --steel-soft: #d7e0df;
-  --line: #d8d0bc;
-  --danger: #a6432f;
-  --danger-soft: #f0dcd4;
+  --paper: #f7f7f6;
+  --card: #ffffff;
+  --ink: #18181b;
+  --ink-soft: #71717a;
+  --brass: #2563eb;
+  --brass-soft: #eff4ff;
+  --steel: #52525b;
+  --steel-soft: #f1f1f2;
+  --line: #e4e4e7;
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
 }
 
 @theme inline {
@@ -27,23 +27,21 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --font-sans: var(--font-sans);
-  --font-display: var(--font-display);
-  --font-mono: var(--font-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #1e1c18;
-    --card: #26231d;
-    --ink: #ede7d9;
-    --ink-soft: #9a9284;
-    --brass: #d3a25e;
-    --brass-soft: #4a3c22;
-    --steel: #7fa3a6;
-    --steel-soft: #2b3a3a;
-    --line: #3a362d;
-    --danger: #d97355;
-    --danger-soft: #3a251f;
+    --paper: #0b0b0c;
+    --card: #18181b;
+    --ink: #fafafa;
+    --ink-soft: #a1a1aa;
+    --brass: #60a5fa;
+    --brass-soft: #17233d;
+    --steel: #a1a1aa;
+    --steel-soft: #1f1f23;
+    --line: #27272a;
+    --danger: #f87171;
+    --danger-soft: #3a1c1c;
   }
 }
 
@@ -59,29 +57,6 @@
 :focus-visible {
   outline: 2px solid var(--brass);
   outline-offset: 2px;
-}
-
-/* Faint ruled-paper lines for the note body, spaced to match leading-7 (28px). */
-.ruled-paper {
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent 27px,
-    var(--line) 27px,
-    var(--line) 28px
-  );
-  background-position: 0 2px;
-}
-
-@keyframes stamp {
-  from {
-    opacity: 0;
-    transform: rotate(-2deg) scale(1.3);
-  }
-  to {
-    opacity: 1;
-    transform: rotate(-2deg) scale(1);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

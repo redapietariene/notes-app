@@ -78,8 +78,6 @@ export default function NoteList({
     }
   }
 
-  const numberByNoteId = new Map(notes.map((n, i) => [n.id, i + 1]));
-
   const notesByCollection = new Map<string, Note[]>();
   const uncollectedNotes: Note[] = [];
   for (const note of notes) {
@@ -109,7 +107,7 @@ export default function NoteList({
       return (
         <li
           key={note.id}
-          className="rounded-lg border border-brass bg-card p-3"
+          className="rounded-lg border border-brass bg-card p-3.5"
         >
           <input
             autoFocus
@@ -133,7 +131,7 @@ export default function NoteList({
             placeholder="Untitled note"
             className="w-full border-none bg-transparent text-sm font-medium text-ink outline-none placeholder:text-ink-soft"
           />
-          <div className="mt-1 truncate font-mono text-[10px] text-ink-soft">
+          <div className="mt-1 truncate text-xs text-ink-soft">
             {new Date(note.updated_at).toLocaleString()}
           </div>
         </li>
@@ -141,45 +139,30 @@ export default function NoteList({
     }
 
     return (
-      <li key={note.id} className="relative">
-        <span
-          aria-hidden
-          className="absolute -top-[7px] left-1/2 h-3 w-3 -translate-x-1/2 rounded-full border border-line bg-paper"
-        />
+      <li key={note.id}>
         <div
-          className={`relative flex items-center overflow-hidden rounded-lg border bg-card transition-colors ${
+          className={`group flex items-center overflow-hidden rounded-lg border transition-colors ${
             note.id === selectedId
-              ? "border-brass"
-              : "border-line hover:border-ink-soft/40"
+              ? "border-brass bg-brass-soft"
+              : "border-transparent hover:bg-steel-soft"
           }`}
         >
-          {note.id === selectedId && (
-            <span
-              aria-hidden
-              className="absolute inset-y-2 left-0 w-1 rounded-r bg-brass"
-            />
-          )}
           <button
             onClick={() => onSelect(note.id)}
-            className="flex-1 overflow-hidden px-4 py-3 pl-5 text-left"
+            className="flex-1 overflow-hidden px-3.5 py-3 text-left"
           >
-            <div className="flex items-baseline justify-between gap-2">
-              <div className="truncate text-sm font-semibold text-ink">
-                {note.title || "Untitled note"}
-              </div>
-              <div className="shrink-0 font-mono text-[10px] text-ink-soft/70">
-                №{String(numberByNoteId.get(note.id)).padStart(3, "0")}
-              </div>
+            <div className="truncate text-sm font-medium text-ink">
+              {note.title || "Untitled note"}
             </div>
-            <div className="mt-1 truncate font-mono text-[10px] text-ink-soft">
+            <div className="mt-1 truncate text-xs text-ink-soft">
               {new Date(note.updated_at).toLocaleString()}
             </div>
             {note.tags.length > 0 && (
-              <div className="mt-1.5 flex flex-wrap gap-1">
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 {note.tags.map((tag) => (
                   <span
                     key={tag.id}
-                    className="rounded-full border border-dashed border-line px-1.5 py-0.5 text-[10px] text-steel"
+                    className="rounded-full bg-steel-soft px-2 py-0.5 text-xs text-steel"
                   >
                     {tag.name}
                   </span>
@@ -187,19 +170,19 @@ export default function NoteList({
               </div>
             )}
           </button>
-          <div className="flex flex-col items-center gap-1.5 pr-3">
+          <div className="flex flex-col items-end gap-1.5 pr-3 opacity-0 transition-opacity group-hover:opacity-100">
             <button
               onClick={() => startRenaming(note)}
               title="Rename note"
-              className="font-mono text-[10px] text-ink-soft hover:text-brass"
+              className="text-xs text-ink-soft hover:text-brass"
             >
-              edit
+              Rename
             </button>
             <select
               value={note.collection_id ?? ""}
               onChange={(e) => onMoveNote(note.id, e.target.value || null)}
               title="Move to collection"
-              className="max-w-[64px] rounded border-none bg-transparent font-mono text-[9px] text-ink-soft/70 hover:text-brass"
+              className="max-w-[80px] rounded border-none bg-transparent text-xs text-ink-soft hover:text-brass"
             >
               <option value="">Uncollected</option>
               {collections.map((collection) => (
@@ -216,62 +199,52 @@ export default function NoteList({
 
   return (
     <aside className="flex w-80 shrink-0 flex-col border-r border-line bg-paper">
-      <div className="flex items-center justify-between border-b-2 border-brass px-4 py-4">
-        <h1 className="font-display text-sm uppercase tracking-[0.25em] text-ink">
-          Notes
-        </h1>
+      <div className="px-5 py-5">
         <button
           onClick={onCreate}
           disabled={creating}
-          className="rounded-sm border border-brass px-3 py-1.5 text-sm font-medium text-brass transition-colors hover:bg-brass hover:text-card disabled:opacity-50"
+          className="w-full rounded-lg bg-brass px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-brass/90 disabled:opacity-50"
         >
           {creating ? "Creating…" : "+ New note"}
         </button>
       </div>
-      <div className="border-b border-line px-4 py-2.5">
-        <div className="relative">
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search notes…"
-            className="w-full rounded-sm border border-line bg-card px-3 py-1.5 pr-8 text-sm text-ink outline-none placeholder:text-ink-soft focus:border-brass"
-          />
-          {searching && (
-            <span
-              aria-hidden
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 font-mono text-[10px] text-ink-soft"
-            >
-              …
-            </span>
-          )}
-        </div>
+      <div className="px-5 pb-4">
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search notes…"
+          className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-soft focus:border-brass"
+        />
+        {searching && (
+          <div className="mt-1.5 text-xs text-ink-soft">Searching…</div>
+        )}
       </div>
       {!isSearchActive && (
-        <div className="flex items-center justify-between border-b border-line px-4 py-2">
-          <span className="font-display text-[11px] uppercase tracking-wider text-ink-soft">
+        <div className="flex items-center justify-between px-5 pb-2">
+          <span className="text-xs font-medium uppercase tracking-wide text-ink-soft">
             Collections
           </span>
           <button
             onClick={onCreateCollection}
             className="text-xs font-medium text-brass hover:underline"
           >
-            + New collection
+            + New
           </button>
         </div>
       )}
       {tags.length > 0 && (
-        <div className="border-b border-line px-4 py-2.5">
-          <div className="mb-1.5 font-display text-[11px] uppercase tracking-wider text-ink-soft">
+        <div className="px-5 pb-4">
+          <div className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-soft">
             Tags
           </div>
           <div className="flex flex-wrap gap-1.5">
             <button
               onClick={onClearTagFilter}
-              className={`rounded-full border px-2 py-0.5 text-xs transition-colors ${
+              className={`rounded-full px-2.5 py-1 text-xs transition-colors ${
                 activeTagIds.size === 0
-                  ? "border-brass bg-brass text-card"
-                  : "border-dashed border-line text-ink-soft hover:border-brass hover:text-brass"
+                  ? "bg-brass text-white"
+                  : "bg-steel-soft text-ink-soft hover:text-ink"
               }`}
             >
               All
@@ -281,10 +254,10 @@ export default function NoteList({
                 key={tag.id}
                 onClick={() => onToggleTagFilter(tag.id)}
                 aria-pressed={activeTagIds.has(tag.id)}
-                className={`rounded-full border px-2 py-0.5 text-xs transition-colors ${
+                className={`rounded-full px-2.5 py-1 text-xs transition-colors ${
                   activeTagIds.has(tag.id)
-                    ? "border-brass bg-brass text-card"
-                    : "border-dashed border-line text-ink-soft hover:border-brass hover:text-brass"
+                    ? "bg-brass text-white"
+                    : "bg-steel-soft text-ink-soft hover:text-ink"
                 }`}
               >
                 {tag.name}
@@ -293,16 +266,16 @@ export default function NoteList({
           </div>
         </div>
       )}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto border-t border-line">
         {isSearchActive ? (
           <>
             {notes.length === 0 && !searching && (
-              <p className="p-4 text-sm text-ink-soft">
+              <p className="p-5 text-sm text-ink-soft">
                 No notes match “{searchQuery.trim()}”.
               </p>
             )}
             {notes.length > 0 && (
-              <ul className="space-y-2 px-3 py-2.5">
+              <ul className="space-y-1 px-3 py-3">
                 {notes.map(renderNoteItem)}
               </ul>
             )}
@@ -310,17 +283,17 @@ export default function NoteList({
         ) : (
           <>
             {notes.length === 0 && (
-              <p className="p-4 text-sm text-ink-soft">No notes yet.</p>
+              <p className="p-5 text-sm text-ink-soft">No notes yet.</p>
             )}
             {groups.map((group) => {
               const isExpanded = !collapsed.has(group.key);
               const isCollection = group.key !== UNCOLLECTED_KEY;
               return (
                 <div key={group.key}>
-                  <div className="flex items-center border-b border-line bg-card/40">
+                  <div className="group/header flex items-center">
                     <button
                       onClick={() => toggleGroup(group.key)}
-                      className="flex flex-1 items-center gap-2 px-4 py-2 text-left font-display text-[11px] uppercase tracking-wider text-ink-soft hover:text-brass"
+                      className="flex flex-1 items-center gap-2 px-5 py-2 text-left text-xs font-medium uppercase tracking-wide text-ink-soft hover:text-ink"
                     >
                       <span
                         className={`inline-block text-[9px] transition-transform ${
@@ -330,12 +303,12 @@ export default function NoteList({
                         &#9654;
                       </span>
                       <span className="truncate">{group.name}</span>
-                      <span className="ml-auto font-mono text-[10px] normal-case text-ink-soft/60">
+                      <span className="ml-auto normal-case text-ink-soft/70">
                         {group.notes.length}
                       </span>
                     </button>
                     {isCollection && (
-                      <div className="flex items-center gap-2 pr-3 font-mono text-[11px]">
+                      <div className="flex items-center gap-2 pr-4 text-xs opacity-0 transition-opacity group-hover/header:opacity-100">
                         <button
                           onClick={() =>
                             onRenameCollection(group.key, group.name)
@@ -343,7 +316,7 @@ export default function NoteList({
                           title="Rename collection"
                           className="text-ink-soft hover:text-brass"
                         >
-                          edit
+                          Rename
                         </button>
                         <button
                           onClick={() =>
@@ -352,15 +325,15 @@ export default function NoteList({
                           title="Delete collection"
                           className="text-ink-soft hover:text-danger"
                         >
-                          del
+                          Delete
                         </button>
                       </div>
                     )}
                   </div>
                   {isExpanded && (
-                    <ul className="space-y-2 px-3 py-2.5">
+                    <ul className="space-y-1 px-3 pb-3">
                       {group.notes.length === 0 && (
-                        <li className="px-1 py-1 text-xs text-ink-soft/70">
+                        <li className="px-2 py-1 text-xs text-ink-soft/70">
                           No notes
                         </li>
                       )}

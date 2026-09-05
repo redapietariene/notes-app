@@ -16,16 +16,16 @@ type NoteEditorProps = {
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
-const STAMP_LABEL: Record<Exclude<SaveStatus, "idle">, string> = {
-  saving: "Saving",
+const STATUS_LABEL: Record<Exclude<SaveStatus, "idle">, string> = {
+  saving: "Saving…",
   saved: "Saved",
-  error: "Failed",
+  error: "Failed to save",
 };
 
-const STAMP_COLOR: Record<Exclude<SaveStatus, "idle">, string> = {
-  saving: "border-steel text-steel",
-  saved: "border-brass text-brass",
-  error: "border-danger text-danger",
+const STATUS_COLOR: Record<Exclude<SaveStatus, "idle">, string> = {
+  saving: "text-ink-soft",
+  saved: "text-steel",
+  error: "text-danger",
 };
 
 export default function NoteEditor({
@@ -73,18 +73,11 @@ export default function NoteEditor({
   }
 
   return (
-    <div className="m-4 flex flex-1 flex-col overflow-hidden rounded-xl border border-line bg-card shadow-sm">
-      <div className="flex items-center justify-between border-b border-line px-6 py-3">
-        <div className="h-7">
-          {status !== "idle" && (
-            <span
-              key={status}
-              className={`inline-block -rotate-2 rounded-sm border-2 border-dashed px-2.5 py-0.5 font-display text-xs uppercase tracking-wider ${STAMP_COLOR[status]} motion-safe:animate-[stamp_0.2s_ease-out]`}
-            >
-              {STAMP_LABEL[status]}
-            </span>
-          )}
-        </div>
+    <div className="m-5 flex flex-1 flex-col overflow-hidden rounded-xl border border-line bg-card">
+      <div className="flex items-center justify-between border-b border-line px-7 py-4">
+        <span className={`text-sm ${status === "idle" ? "text-transparent" : STATUS_COLOR[status]}`}>
+          {status === "idle" ? " " : STATUS_LABEL[status]}
+        </span>
         <div className="flex items-center gap-3">
           <select
             value={note.collection_id ?? ""}
@@ -101,17 +94,17 @@ export default function NoteEditor({
           <button
             onClick={() => onDelete(note.id)}
             disabled={deleting}
-            className="rounded-md border border-danger px-3 py-1.5 text-sm font-medium text-danger transition-colors hover:bg-danger hover:text-card disabled:opacity-50"
+            className="rounded-md px-3 py-1.5 text-sm font-medium text-danger transition-colors hover:bg-danger-soft disabled:opacity-50"
           >
             {deleting ? "Deleting…" : "Delete"}
           </button>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2 border-b border-line px-6 py-3">
+      <div className="flex flex-wrap items-center gap-2 border-b border-line px-7 py-3.5">
         {note.tags.map((tag) => (
           <span
             key={tag.id}
-            className="flex items-center gap-1.5 rounded-full border border-dashed border-line px-2.5 py-1 text-xs text-steel"
+            className="flex items-center gap-1.5 rounded-full bg-steel-soft px-2.5 py-1 text-xs text-steel"
           >
             {tag.name}
             <button
@@ -137,7 +130,7 @@ export default function NoteEditor({
           className="w-24 border-none bg-transparent text-xs text-ink outline-none placeholder:text-ink-soft"
         />
       </div>
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-8 py-6">
+      <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-9 py-7">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -148,7 +141,7 @@ export default function NoteEditor({
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Start writing…"
-          className="ruled-paper w-full flex-1 resize-none border-none bg-transparent leading-7 text-ink outline-none placeholder:text-ink-soft"
+          className="w-full flex-1 resize-none border-none bg-transparent leading-7 text-ink outline-none placeholder:text-ink-soft"
         />
       </div>
     </div>

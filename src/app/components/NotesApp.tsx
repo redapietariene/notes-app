@@ -272,7 +272,7 @@ export default function NotesApp({
           deleting={deletingId === selectedNote.id}
         />
       ) : (
-        <div className="m-4 flex flex-1 items-center justify-center rounded-xl border border-dashed border-line text-ink-soft">
+        <div className="m-5 flex flex-1 items-center justify-center rounded-xl border border-line text-sm text-ink-soft">
           Pick a note, or start a new one.
         </div>
       )}
