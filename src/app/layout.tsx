@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Public_Sans } from "next/font/google";
+import { getServerTheme } from "@/utils/theme-server";
 import "./globals.css";
 
 const publicSans = Public_Sans({
@@ -12,9 +13,15 @@ export const metadata: Metadata = {
   description: "A simple notes app",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const theme = await getServerTheme();
+
   return (
-    <html lang="en" className={`${publicSans.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${publicSans.variable} h-full antialiased`}
+      data-theme={theme ?? undefined}
+    >
       <body className="min-h-full flex flex-col bg-paper text-ink font-sans">
         {children}
       </body>

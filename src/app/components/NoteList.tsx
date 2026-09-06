@@ -203,7 +203,7 @@ export default function NoteList({
         <button
           onClick={onCreate}
           disabled={creating}
-          className="w-full rounded-lg bg-brass px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-brass/90 disabled:opacity-50"
+          className="w-full rounded-lg bg-brass px-3 py-2 text-sm font-medium text-brass-contrast transition-colors hover:bg-brass/90 disabled:opacity-50"
         >
           {creating ? "Creating…" : "+ New note"}
         </button>
@@ -243,7 +243,7 @@ export default function NoteList({
               onClick={onClearTagFilter}
               className={`rounded-full px-2.5 py-1 text-xs transition-colors ${
                 activeTagIds.size === 0
-                  ? "bg-brass text-white"
+                  ? "bg-brass text-brass-contrast"
                   : "bg-steel-soft text-ink-soft hover:text-ink"
               }`}
             >
@@ -256,7 +256,7 @@ export default function NoteList({
                 aria-pressed={activeTagIds.has(tag.id)}
                 className={`rounded-full px-2.5 py-1 text-xs transition-colors ${
                   activeTagIds.has(tag.id)
-                    ? "bg-brass text-white"
+                    ? "bg-brass text-brass-contrast"
                     : "bg-steel-soft text-ink-soft hover:text-ink"
                 }`}
               >

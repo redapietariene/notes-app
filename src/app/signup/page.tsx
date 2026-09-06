@@ -43,7 +43,7 @@ export default async function SignupPage({
 
           <button
             type="submit"
-            className="mt-2 rounded-lg bg-brass px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-brass/90"
+            className="mt-2 rounded-lg bg-brass px-3 py-2 text-sm font-medium text-brass-contrast transition-colors hover:bg-brass/90"
           >
             Sign up
           </button>
