@@ -44,6 +44,13 @@ export default async function LoginPage({
             />
           </label>
 
+          <Link
+            href="/forgot-password"
+            className="-mt-2 self-end text-sm text-ink-soft hover:text-brass hover:underline"
+          >
+            Reset password
+          </Link>
+
           {error && <p className="text-sm text-danger">{error}</p>}
 
           <button
