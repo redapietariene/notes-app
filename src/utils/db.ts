@@ -10,6 +10,17 @@ async function getUserId(supabase: SupabaseServerClient): Promise<string> {
   return data.claims.sub;
 }
 
+// Right after sign-in, PostgREST can reject a fresh token because its clock is
+// slightly behind the Auth server's ("JWT issued at future"). Retry once.
+async function retryIfJwtFromFuture<
+  T extends { error: { message: string } | null },
+>(run: () => PromiseLike<T>): Promise<T> {
+  const result = await run();
+  if (!result.error?.message.includes("JWT issued at future")) return result;
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return run();
+}
+
 export type Tag = {
   id: string;
   name: string;
@@ -50,10 +61,12 @@ function mapNote(row: NoteRow): Note {
 
 export async function getNotes(): Promise<Note[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("notes")
-    .select(NOTE_COLUMNS)
-    .order("updated_at", { ascending: false });
+  const { data, error } = await retryIfJwtFromFuture(() =>
+    supabase
+      .from("notes")
+      .select(NOTE_COLUMNS)
+      .order("updated_at", { ascending: false }),
+  );
 
   if (error) throw error;
   return (data as unknown as NoteRow[]).map(mapNote);
@@ -107,10 +120,12 @@ export async function deleteNote(id: string): Promise<void> {
 
 export async function getCollections(): Promise<Collection[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("collections")
-    .select("id, name")
-    .order("name", { ascending: true });
+  const { data, error } = await retryIfJwtFromFuture(() =>
+    supabase
+      .from("collections")
+      .select("id, name")
+      .order("name", { ascending: true }),
+  );
 
   if (error) throw error;
   return data;
@@ -154,10 +169,12 @@ export async function deleteCollection(id: string): Promise<void> {
 
 export async function getTags(): Promise<Tag[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("tags")
-    .select("id, name")
-    .order("name", { ascending: true });
+  const { data, error } = await retryIfJwtFromFuture(() =>
+    supabase
+      .from("tags")
+      .select("id, name")
+      .order("name", { ascending: true }),
+  );
 
   if (error) throw error;
   return data;
