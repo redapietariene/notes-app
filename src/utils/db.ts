@@ -10,6 +10,12 @@ async function getUserId(supabase: SupabaseServerClient): Promise<string> {
   return data.claims.sub;
 }
 
+async function getAuthedClient() {
+  const supabase = await createClient();
+  const userId = await getUserId(supabase);
+  return { supabase, userId };
+}
+
 // Right after sign-in, PostgREST can reject a fresh token because its clock is
 // slightly behind the Auth server's ("JWT issued at future"). Retry once.
 async function retryIfJwtFromFuture<
@@ -60,11 +66,12 @@ function mapNote(row: NoteRow): Note {
 }
 
 export async function getNotes(): Promise<Note[]> {
-  const supabase = await createClient();
+  const { supabase, userId } = await getAuthedClient();
   const { data, error } = await retryIfJwtFromFuture(() =>
     supabase
       .from("notes")
       .select(NOTE_COLUMNS)
+      .eq("user_id", userId)
       .order("updated_at", { ascending: false }),
   );
 
@@ -73,18 +80,18 @@ export async function getNotes(): Promise<Note[]> {
 }
 
 export async function searchNotes(query: string): Promise<Note[]> {
-  const supabase = await createClient();
+  const { supabase, userId } = await getAuthedClient();
   const { data, error } = await supabase
     .rpc("search_notes", { search_query: query })
-    .select(NOTE_COLUMNS);
+    .select(NOTE_COLUMNS)
+    .eq("user_id", userId);
 
   if (error) throw error;
   return (data as unknown as NoteRow[]).map(mapNote);
 }
 
 export async function createNote(): Promise<Note> {
-  const supabase = await createClient();
-  const userId = await getUserId(supabase);
+  const { supabase, userId } = await getAuthedClient();
   const { data, error } = await supabase
     .from("notes")
     .insert({ title: "Untitled note", body: "", user_id: userId })
@@ -99,11 +106,12 @@ export async function updateNote(
   id: string,
   fields: { title?: string; body?: string; collection_id?: string | null },
 ): Promise<Note> {
-  const supabase = await createClient();
+  const { supabase, userId } = await getAuthedClient();
   const { data, error } = await supabase
     .from("notes")
     .update(fields)
     .eq("id", id)
+    .eq("user_id", userId)
     .select(NOTE_COLUMNS)
     .single();
 
@@ -112,18 +120,22 @@ export async function updateNote(
 }
 
 export async function deleteNote(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase.from("notes").delete().eq("id", id);
+  const { supabase, userId } = await getAuthedClient();
+  const { error } = await supabase.from("notes")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", userId);
 
   if (error) throw error;
 }
 
 export async function getCollections(): Promise<Collection[]> {
-  const supabase = await createClient();
+  const { supabase, userId } = await getAuthedClient();
   const { data, error } = await retryIfJwtFromFuture(() =>
     supabase
       .from("collections")
       .select("id, name")
+      .eq("user_id", userId)
       .order("name", { ascending: true }),
   );
 
@@ -132,8 +144,7 @@ export async function getCollections(): Promise<Collection[]> {
 }
 
 export async function createCollection(name: string): Promise<Collection> {
-  const supabase = await createClient();
-  const userId = await getUserId(supabase);
+  const { supabase, userId } = await getAuthedClient();
   const { data, error } = await supabase
     .from("collections")
     .insert({ name, user_id: userId })
@@ -148,11 +159,12 @@ export async function renameCollection(
   id: string,
   name: string,
 ): Promise<Collection> {
-  const supabase = await createClient();
+  const { supabase, userId } = await getAuthedClient();
   const { data, error } = await supabase
     .from("collections")
     .update({ name })
     .eq("id", id)
+    .eq("user_id", userId)
     .select("id, name")
     .single();
 
@@ -161,18 +173,22 @@ export async function renameCollection(
 }
 
 export async function deleteCollection(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase.from("collections").delete().eq("id", id);
+  const { supabase, userId } = await getAuthedClient();
+  const { error } = await supabase.from("collections")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", userId);
 
   if (error) throw error;
 }
 
 export async function getTags(): Promise<Tag[]> {
-  const supabase = await createClient();
+  const { supabase, userId } = await getAuthedClient();
   const { data, error } = await retryIfJwtFromFuture(() =>
     supabase
       .from("tags")
       .select("id, name")
+      .eq("user_id", userId)
       .order("name", { ascending: true }),
   );
 
@@ -184,8 +200,7 @@ export async function addTagToNote(
   noteId: string,
   tagName: string,
 ): Promise<Tag> {
-  const supabase = await createClient();
-  const userId = await getUserId(supabase);
+  const { supabase, userId } = await getAuthedClient();
   const name = tagName.trim();
 
   const { data: inserted, error: insertError } = await supabase
@@ -201,6 +216,7 @@ export async function addTagToNote(
       .from("tags")
       .select("id, name")
       .eq("name", name)
+      .eq("user_id", userId)
       .single();
     if (fetchError) throw fetchError;
     tag = existing;
@@ -220,7 +236,7 @@ export async function removeTagFromNote(
   noteId: string,
   tagId: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  const { supabase } = await getAuthedClient();
   const { error } = await supabase
     .from("note_tags")
     .delete()
