@@ -31,6 +31,8 @@ Run `npm run dev`. The app runs at http://localhost:3000.
 - For supabase db updates always use migrations
 - Keep code clean and simple
 - Always create new branch from master when creating new feature
+- Use the CLI for one-off tasks. Use MCP when the agent needs to repeat or
+react to what's on screen.
 
 ## Do not
 - Do not add npm packages without asking first
