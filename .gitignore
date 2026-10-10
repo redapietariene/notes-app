@@ -50,3 +50,5 @@ node_modules/
 /playwright/.auth/
 .playwright-mcp/
 anthropic-home.png
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
